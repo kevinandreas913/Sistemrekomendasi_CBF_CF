@@ -227,9 +227,3 @@ rmse = np.sqrt(mean_squared_error(y_val, y_pred))
 - Content-Base Filtering lebih mudah dalam penerapan karena hanya menggunakan TF-IDF dan cosine similarity berdasarkan kemiripan judul lagu dengan hasil average cosine similarity adalah 0,29.
 - Collavorative filtering lebih sulit dalam hal implementasi karena membutuhkan model neural network, dll dalam membantu model ini. Tetapi hasil testing pada collaborative filtering mampu mencapai nilai RMSE 0,1946 yang dianggap baik karena nilai RMSE < 0,2.
 - Berdasarkan hasil Content-Base Filtering dan Collaborative Filtering, Collaborative filtering lebih unggul dalam memberikan saran rekomendasi lagu. dikarenakan nilai RMSE yang baik.
-
-#   s i s t e m r e k o m e n d a s i 
- 
- #   S i s t e m r e k o m e n d a s i _ C B F _ C F 
- 
- 
