@@ -216,6 +216,7 @@ proses tersebut meliputi
 ---
 ### Evaluasi Collaborative Filtering
 Evaluasi atas collaborative Filltering meliputi penggunaan RMSE berdasarkan perbandingan dari y_value dan y_prediksi.
+
 ![RMSE](gambar/rmse.png)
 ```python
 rmse = np.sqrt(mean_squared_error(y_val, y_pred))
