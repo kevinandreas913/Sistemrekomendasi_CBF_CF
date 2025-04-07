@@ -1,6 +1,5 @@
 # Laporan Proyek Sistem Rekomenasi - Andreas Kevin
 
-
 Pada era teknologi digital, tenologi machine learning menjadi teknologi utama dalam pengolahan dan analisis data. Machine learning membantu dalam banyak kasus. Penerapan machine learning saat bermacam, seperti kasus rekomendasi. Kasus rekomenasi merupakan kasus yang dilakukan dalam memberikan rekomenasi atas berbagai pilihan yang harus dipilih oleh costumers. 
 
 Teknik rekomendasi dalam machine learning telah diadopsi dalam berbagai hal seperti sosial media dalam memberikan postingan yang disukai, marketplace dalam memberikan rekomendasi produk yang diinginkan oleh costumers, hingga dalam skala global seperi dilakukan oleh e-commerce seperti amazone, netflix, dan spotify.
@@ -229,6 +228,8 @@ rmse = np.sqrt(mean_squared_error(y_val, y_pred))
 - Collavorative filtering lebih sulit dalam hal implementasi karena membutuhkan model neural network, dll dalam membantu model ini. Tetapi hasil testing pada collaborative filtering mampu mencapai nilai RMSE 0,1946 yang dianggap baik karena nilai RMSE < 0,2.
 - Berdasarkan hasil Content-Base Filtering dan Collaborative Filtering, Collaborative filtering lebih unggul dalam memberikan saran rekomendasi lagu. dikarenakan nilai RMSE yang baik.
 
-#   s i s t e m r e k o m e n d a s i  
- #   S i s t e m r e k o m e n d a s i _ C B F _ C F  
+#   s i s t e m r e k o m e n d a s i 
+ 
+ #   S i s t e m r e k o m e n d a s i _ C B F _ C F 
+ 
  
