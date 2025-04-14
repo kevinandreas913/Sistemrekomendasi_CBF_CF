@@ -38,15 +38,20 @@ Dataset merupakan kumpulan data yang teorganisir. Pada kasus ini digunakan datas
 - **Date of Release** = Tanggal dirilis lagu tersebut.
 - **Description** = Rincian deskripsi mengenai lagu.
 - **Metascore** = Nilai rata-rata berdasarkan kritikus.
-- **User Score** = Nilai score dari pengguna mengenai lagu tersebut.
+- **User Score** = Nilai score dari pengguna mengenai lagu tersebut.  
+
 
 ---
 ### Proses analisis data
 Proses pengumpulan data yang telah dilkaukan kemudian dilakukan analisis atas data teresebut. Analisis terebut dilkukan untuk memahami konidisi isi atas data tersebut. Beberapa teknik analisis yang dilakukan berupa: 
 - **.info()** untuk meliht informasi atas dataset terserbut berupa jenis tipe data hingga jumlah data.
-- **isnull().sum()** digunakan untuk menilai jumlah data yang kosong pada data setelah itu akan dilkaukan **.dropna()** untuk membuang baris yang kosong.
+- **isnull().sum()** digunakan untuk menilai jumlah data yang kosong pada data. 
 - **.duplicated().sum()** untuk menilai jumlah duplikasi pada data. Pada bagian ini terlihat jumlah duplikasi pada data adalah 0.
-- **.duplicated(subset=['Name of the Song']).sum()** untuk melihat jumlah duplikasi data pada atribut Name of the Song. Pada ini terdapat data lagu yang duplicate. Maka dilkaukan **.drop_duplicates(subset=["Name of the Song"])** untuk membuang data yang kosong tersebut.
+- **.duplicated(subset=['Name of the Song']).sum()** untuk melihat jumlah duplikasi data pada atribut Name of the Song. Pada ini terdapat data lagu yang duplicate.
+  
+- Data total terdiri dari 198126 Data.
+- Terdapat data kosong pada Description berjumlah 4369 data, Metascore berjumlah 24385 data, dan User Score berjumlah 49281 data.
+- Jumlah duplikasi berdapatkan judul lagu terdapat 194214 lagu.
 
 ---
 ### Visualisasi Data
@@ -57,10 +62,29 @@ Beberapa teknik visualisasi digunakan untuk memahami distribusi data antara lain
 
 ## 🛠️ Data Preparation
 Data preparation merupakan proses penyiapan data agar dapat diproses lebih lanjut (sebelum dilakukan pelatihan atas model). Pada kasus ini, proses data preparation dapat diuraikan menjadi:
+
+### Data Preparation General for Content Base Filtering and Collaborative Filtering  
+- **.dropna()** untuk membuang baris yang kosong.
+- **.drop_duplicates(subset=["Name of the Song"])** untuk membuang data yang kosong tersebut.
+```python
+df_songs_encode['Artist'] = df_songs['Artist'].str.replace(r'^by\s+', '', regex=True)
+```
+- Pada dataframe tersebut terlihat data pada atribut Artist dengan setiap nama artis dimulai dengan awal "by". Maka akan dilakukan proses untuk membuang kata by di setiap awal nama artis tersebut.  
+
+**Total data setelah dibersihkan terdiri dari 2537 data dengan 7 atribut.**  
+  
+---
 ### 1. Data Preparation Content Base Filtering
 Data preparation untuk Content Base Filtering didasari pada :
 - Membuang atribut **Description, Unnamed: 0, dan Date of Release**. Tujuan dari pembuangan atribut ini untuk mempersiapkan atribut yang akan digunakan pada proses CBF.
-- Total data yang siap digunakan untuk content base filtering ini adalah 2537 data dengan atribut nama lagu, artis, metascore, dn user score.
+- TF-IDF digunakan untuk mengubah judul lagu menjadi representasi numerik.
+```python
+tf = TfidfVectorizer()
+tfidf_matrix = tf.fit_transform(df_songs['Name of the Song']) 
+
+tfidf_matrix.shape 
+tfidf_matrix.todense()
+```
 
 ---
 ### 2. Data Preparation Collaborative Filtering
@@ -95,12 +119,13 @@ Proses modeling memuat proses perancangan model yang digunakan dalam rekomendasi
 ---
 ### Content Base Filtering
 Content Base Filtering yang dibagun didasarkan pada beberapa komponen penting yang berupa:
-- TF-IDF digunakan untuk mengubah judul lagu menjadi representasi numerik.
 - Cosine similarity dihitung similariity antar judul lagu, menghasilkan matriks similarity.
 ```python
 tf = TfidfVectorizer()
 tfidf_matrix = tf.fit_transform(df_songs['Name of the Song']) 
-
+```
+- Menghitung cousin similarity pada setiap atribut
+```python
 cosine_sim = cosine_similarity(tfidf_matrix) 
 ```
 Proses ini adalah proses inti dalam content base filtering. Content base filtering penting dalam menghitung similarity hal ini dikarenakan content base filtering mengukur kemiripan antara lagu-lagu.
@@ -109,6 +134,28 @@ Proses ini adalah proses inti dalam content base filtering. Content base filteri
   closest = similarity_data.columns[index[-1:-(k+2):-1]]
 ```
 yang pada proses ini mengambil index dari nilai similarity tertinggi dan mengeluarkan rekomendasi lagu yang paling relevan.
+
+---
+### Solusi - Top 5 rekomendasi pada teknik Content Base Filtering
+Solusi yang dibangun dirancang menggunakan:
+```python
+def song_recomendations(target_song_artist, similarity_data=cosine_sim_df, items=df_songs[['Name of the Song', 'Artist']], k=5):
+    index = similarity_data.loc[:,target_song_artist].to_numpy().argpartition(
+        range(-1, -k, -1)).flatten()
+    
+    closest = similarity_data.columns[index[-1:-(k+2):-1]]
+    
+    closest = closest.drop(target_song_artist, errors='ignore')
+ 
+    return pd.DataFrame(closest).merge(items).head(k)
+
+    song_recomendations('The Midnight Organ Fight')
+```
+- **def song_recommendations(...)** digunakan sebagai fungsi rekomendasi lagu berdasarkan kemiripan (similarity) antar lagu dan artis.
+- **similarity_data.loc[:, target_song_artist].to_numpy().argpartition(...)** digunakan untuk mencari index dari lagu yang paling mirip (nilai similarity tertinggi) terhadap lagu/artis target, tanpa mengurutkan seluruh data (lebih efisien).
+- **closest = similarity_data.columns[index[-1:-(k+2):-1]]** mengambil k+1 lagu teratas dari hasil similarity tertinggi (termasuk lagu target).
+- **closest.drop(target_song_artist, errors='ignore')** memastikan lagu/artis yang sama tidak direkomendasikan.
+- **pd.DataFrame(closest).merge(items)** menggabungkan hasil rekomendasi dengan informasi lagu dan artis dari data asli.
 
 ---
 ### Collaborative Filtering
@@ -150,6 +197,38 @@ history = model.fit(
 proses tersebut meliputi pelatihan, hingga selesainya yang dimaksimalkan dengan x dari x_train dan y dari y_train, dengan ukuran data setiap pelatihan yaitu 64, 100 iterasi maksimal, batas callbacks, dan validasi data berdasarkan x_val dan y_val yang telah dibangun, serta menampilkan proses bar selama pelatihan dengan verbose=1.
 
 ---
+### Solusi - Top 5 rekomendasi pada teknik Collaborative Filtering
+```python
+import pandas as pd
+
+artist_id = df_songs.Artist.sample(1).iloc[0]
+
+songs_by_artist = df_songs[df_songs.Artist == artist_id]
+
+songs_not_by_artist = df_songs[~df_songs['Name of the Song'].isin(songs_by_artist['Name of the Song'].values)]
+songs_not_by_artist_ids = songs_not_by_artist['Name of the Song'].values
+
+artist_song_array = np.hstack(
+    ([[artist_id]] * len(songs_not_by_artist_ids), songs_not_by_artist_ids.reshape(-1, 1))
+)
+
+ratings = model.predict(artist_song_array).flatten()
+top_ratings_indices = ratings.argsort()[-5:][::-1]
+recommended_song_ids = songs_not_by_artist_ids[top_ratings_indices]
+
+artist_name = le_artist.inverse_transform([artist_id - 1])[0]  
+recommended_song_titles = le_song.inverse_transform(recommended_song_ids.astype(int))
+recommended_scores = ratings[top_ratings_indices]
+```
+- **artist_id = df_songs.Artist.sample(1).iloc[0]** digunakan untuk mengambil artis secara acak dari dataset.
+- **songs_by_artist = df_songs[df_songs.Artist == artist_id]** berisi semua lagu yang sudah pernah dibuat oleh artis tersebut.
+- **songs_not_by_artist = df_songs[~df_songs['Name of the Song'].isin(songs_by_artist['Name of the Song'].values)]** berisi lagu-lagu yang belum dibuat oleh artis itu, dan akan menjadi kandidat untuk rekomendasi.
+- **artist_song_array** array berisi pasangan [artist_id, song_id] yang dibentuk untuk setiap lagu yang belum dibuat oleh artis, sebagai input ke model.
+- **model.predict(...)** untuk memprediksi seberapa besar kemungkinan artis membuat lagu-lagu tersebut.
+- **ratings.argsort()[-5:][::-1]** mengambil 5 lagu teratas dengan skor prediksi tertinggi sebagai hasil rekomendasi.
+- **le_artist.inverse_transform(...)** dan **le_song.inverse_transform(...)** digunakan untuk mengubah kembali ID artis dan lagu ke bentuk nama aslinya, karena sebelumnya sudah melalui proses encoding.
+
+---
 ### Kelebihan dan kekurangan CBF dan CF
 #### Content Base Filtering
 **Kelebihan:**
@@ -175,43 +254,59 @@ proses tersebut meliputi pelatihan, hingga selesainya yang dimaksimalkan dengan 
 
 ## 🔍 Evaluation
 ### Evaluasi Content Based Filtering
-Evaluasi dilakukan dengan menghitung rata-rata cosine similarity. Ini dilakukan dengan perintah
+Evaluasi dilakukan dengan menghitung precission. Ini dilakukan dengan perintah
 ```python
-def avg_cosine_similarity(k=3):
-    total_sim = 0
-    count = 0
+def tokenisasi(teks):
+    return set(re.findall(r'\b\w+\b', teks.lower()))
 
-    for idx, row in df_songs.iterrows():
-        target_song = row['Name of the Song']
+def presisi_untuk_lagu_acak(data_lagu, matriks_similarity, k=3):
+    lagu_target = data_lagu['Name of the Song'].sample(n=1).values[0]
+    print(f"Lagu target yang dipilih secara acak: {lagu_target}")
 
-        if target_song not in cosine_sim_df.columns:
-            continue
-        try:
-            recs = song_recomendations(target_song, k=k)
-        except:
-            continue
+    if lagu_target not in matriks_similarity.columns:
+        print(f"Lagu {lagu_target} tidak ditemukan dalam matriks kemiripan.")
+        return
 
-        # Ambil similarity score antara target dan rekomendasi
-        for rec_song in recs['Name of the Song']:
-            sim_score = cosine_sim_df.loc[target_song, rec_song]
-            total_sim += sim_score
-            count += 1
+    try:
+        rekomendasi = song_recomendations(lagu_target, similarity_data=matriks_similarity, k=k)
+    except Exception as e:
+        print(f"Terjadi kesalahan: {e}")
+        return
 
-    avg_sim = total_sim / count if count else 0
-    print(f"Avg Cosine Similarity@{k}: {avg_sim:.4f}")
-    return avg_sim
+    token_target = tokenisasi(lagu_target)
+    if not token_target:
+        print(f"Tidak ada token untuk lagu target: {lagu_target}")
+        return
 
-avg_cosine_similarity(3)
+    jumlah_relevan = 0
+    for judul_lagu_rekom in rekomendasi['Name of the Song']:
+        token_rekom = tokenisasi(judul_lagu_rekom)
+        if token_target & token_rekom:
+            jumlah_relevan += 1
+
+    presisi = jumlah_relevan / k
+    print(f"Presisi untuk lagu target {lagu_target}: {presisi:.2f}")
+
+    # Simpan contoh hasil rekomendasi ke dalam DataFrame
+    hasil_df = rekomendasi.copy()
+    hasil_df.insert(0, "Judul Lagu Target", lagu_target)
+
+    print("\n Hasil rekomendasi dan presisi:")
+    display(hasil_df)
+
+    return presisi, hasil_df
 ```
-proses tersebut meliputi 
-- **def avg_cosine_similarity(k=3):** merupakan fungsi untuk menghitung rata-rata nilai kemiripan (cosine similarity) antara lagu target dan hasil rekomendasinya.
-- **for idx, row in df_songs.iterrows():** digunakan untuk melakukan iterasi ke setiap lagu dalam dataset.
-- **if target_song not in cosine_sim_df.columns:** mengecek apakah lagu target ada di dalam data similarity, jika tidak maka dilewati.
-- **song_recommendations(target_song, k=k)** dipanggil untuk mendapatkan rekomendasi lagu berdasarkan lagu target.
-- **cosine_sim_df.loc[target_song, rec_song]** mengambil nilai cosine similarity antara lagu target dan lagu hasil rekomendasi.
-- **total_sim += sim_score** menjumlahkan semua nilai similarity dari seluruh lagu dan rekomendasinya.
-- **avg_sim = total_sim / count if count else 0** menghitung rata-rata similarity hanya jika ada data yang valid, jika tidak maka hasilnya 0.
-- Hasil evaluasi diperoleh Cosine similarity sebesar 0,29. Hasil ini dapat dikatakan cukup mirip dengan konten, hal ini dikarenakan dataset yang sangat besar dan beragam. 
+proses tersebut meliputi:  
+- **lagu_target = data_lagu['Name of the Song'].sample(n=1).values[0]** = Memilih satu lagu secara acak dari dataset data_lagu sebagai lagu target untuk rekomendasi.
+- **if lagu_target not in matriks_similarity.columns:** = Mengecek apakah lagu target tersedia dalam matriks similarity. Jika tidak ada, fungsi dihentikan.
+- **song_recommendations(lagu_target, similarity_data=matriks_similarity, k=k)** = Memanggil fungsi untuk mendapatkan k rekomendasi lagu teratas berdasarkan lagu target dan matriks similarity.
+- **token_target = tokenisasi(lagu_target)** = Melakukan tokenisasi (pemecahan kata) terhadap judul lagu target agar bisa dibandingkan dengan lagu-lagu hasil rekomendasi.
+- **if token_target & token_rekom:** = Mengecek apakah terdapat irisan (kesamaan token/kata) antara lagu target dan lagu yang direkomendasikan. Jika ya, dianggap relevan.
+- **presisi = jumlah_relevan / k** = Menghitung nilai precision, yaitu rasio antara jumlah lagu relevan yang direkomendasikan dibanding total jumlah rekomendasi (k).
+![RMSE](gambar/presisi.png)
+- **hasil_df = rekomendasi.copy()** = Menyimpan hasil rekomendasi dalam bentuk DataFrame untuk ditampilkan atau dianalisis lebih lanjut.
+
+Fungsi ini memberikan gambaran seberapa relevan hasil rekomendasi lagu berdasarkan kemiripan token judul.
 
 ---
 ### Evaluasi Collaborative Filtering
@@ -222,9 +317,10 @@ Evaluasi atas collaborative Filltering meliputi penggunaan RMSE berdasarkan perb
 rmse = np.sqrt(mean_squared_error(y_val, y_pred))
 ```
 - RMSE cocok digunakan dalam kasus collaborative filtering dikarenakan mengukur jarak asli dengan hasil prediksi sehingga metode evaluasi ini dinilai cocok. 
-- Hasil evaluasi diperoleh nilai RMSE 0,1946 yang merupakan baik dikarenakan RMSE < 0,2. Hal ini dengan mempertimbangkan dataset yang besar dan bervariasi sehingga Collaborative Filtering dianggap mampu untuk menebak score lagu.
+- Hasil evaluasi diperoleh nilai RMSE 0,1952 yang merupakan baik dikarenakan RMSE < 0,2. Hal ini dengan mempertimbangkan dataset yang besar dan bervariasi sehingga Collaborative Filtering dianggap mampu untuk menebak score lagu.
 
 ## 🎯 Kesimpulan
-- Content-Base Filtering lebih mudah dalam penerapan karena hanya menggunakan TF-IDF dan cosine similarity berdasarkan kemiripan judul lagu dengan hasil average cosine similarity adalah 0,29.
+- Content-Base Filtering lebih mudah dalam penerapan karena hanya menggunakan TF-IDF dan cosine similarity berdasarkan kemiripan judul lagu dengan hasil precission adalah 0,80 atau 80%.
 - Collavorative filtering lebih sulit dalam hal implementasi karena membutuhkan model neural network, dll dalam membantu model ini. Tetapi hasil testing pada collaborative filtering mampu mencapai nilai RMSE 0,1946 yang dianggap baik karena nilai RMSE < 0,2.
-- Berdasarkan hasil Content-Base Filtering dan Collaborative Filtering, Collaborative filtering lebih unggul dalam memberikan saran rekomendasi lagu. dikarenakan nilai RMSE yang baik.
+- Content Base filtering tidak bisa menangkap selera pengguna secara kolektif sedangkan collaborative filtering Cocok untuk sistem dengan banyak user dan interaksi.
+- Berdasarkan hasil Content-Base Filtering dan Collaborative Filtering, Content Base Filtering dapat dipercaya dalam memberikan saran rekomendasi lagu dikarenakan precision mencapai 80%. Pada kasus ini, Collaborative Filtering dapat dipercaya dalam memberikan rekomendasi lagu berdasarkan penyanyi.
