@@ -64,6 +64,7 @@ Beberapa teknik visualisasi digunakan untuk memahami distribusi data antara lain
 ## 🛠️ Data Preparation
 Data preparation merupakan proses penyiapan data agar dapat diproses lebih lanjut (sebelum dilakukan pelatihan atas model). Pada kasus ini, proses data preparation dapat diuraikan menjadi:
 
+---
 ### Data Preparation General for Content Base Filtering and Collaborative Filtering  
 - **.dropna()** untuk membuang baris yang kosong.
 - **.drop_duplicates(subset=["Name of the Song"])** untuk membuang data yang kosong tersebut.
