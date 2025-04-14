@@ -48,7 +48,8 @@ Proses pengumpulan data yang telah dilkaukan kemudian dilakukan analisis atas da
 - **isnull().sum()** digunakan untuk menilai jumlah data yang kosong pada data. 
 - **.duplicated().sum()** untuk menilai jumlah duplikasi pada data. Pada bagian ini terlihat jumlah duplikasi pada data adalah 0.
 - **.duplicated(subset=['Name of the Song']).sum()** untuk melihat jumlah duplikasi data pada atribut Name of the Song. Pada ini terdapat data lagu yang duplicate.
-  
+
+- Data berisikan 7 atribut.
 - Data total terdiri dari 198126 Data.
 - Terdapat data kosong pada Description berjumlah 4369 data, Metascore berjumlah 24385 data, dan User Score berjumlah 49281 data.
 - Jumlah duplikasi berdapatkan judul lagu terdapat 194214 lagu.
