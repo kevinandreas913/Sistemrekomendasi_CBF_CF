@@ -115,7 +115,7 @@ x_train, x_val, y_train, y_val = (
 )
 ```
 
-## 🤖 Modeling
+## 🤖 Modeling and Result
 Proses modeling memuat proses perancangan model yang digunakan dalam rekomendasi.
 
 ---
@@ -158,6 +158,14 @@ def song_recomendations(target_song_artist, similarity_data=cosine_sim_df, items
 - **closest = similarity_data.columns[index[-1:-(k+2):-1]]** mengambil k+1 lagu teratas dari hasil similarity tertinggi (termasuk lagu target).
 - **closest.drop(target_song_artist, errors='ignore')** memastikan lagu/artis yang sama tidak direkomendasikan.
 - **pd.DataFrame(closest).merge(items)** menggabungkan hasil rekomendasi dengan informasi lagu dan artis dari data asli.
+
+---
+### Top n Rekomendasi Content Base Filtering
+Pada hasil content base filtering akan menghasilkan output dengan memunculkn 5 lagu yang paling mendekati berdasarkan kata yang terdapat pada lagu yang dicari. Adapun contoh dari hasil tersebut adalah sebagai berikut:  
+![R-CBF-1](gambar/rekomendasi%20content%20base%20filtering.png)  
+![R-CBF-2](gambar/rekomendasi%20content%20base%20filtering1.png)  
+![R-CBF-3](gambar/rekomendasi%20content%20base%20filtering2.png)  
+
 
 ---
 ### Collaborative Filtering
@@ -229,6 +237,11 @@ recommended_scores = ratings[top_ratings_indices]
 - **model.predict(...)** untuk memprediksi seberapa besar kemungkinan artis membuat lagu-lagu tersebut.
 - **ratings.argsort()[-5:][::-1]** mengambil 5 lagu teratas dengan skor prediksi tertinggi sebagai hasil rekomendasi.
 - **le_artist.inverse_transform(...)** dan **le_song.inverse_transform(...)** digunakan untuk mengubah kembali ID artis dan lagu ke bentuk nama aslinya, karena sebelumnya sudah melalui proses encoding.
+
+---
+### Top n Rekomendasi Collaborative Filtering
+Pada hasil collaborative filtering akan menghasilkan output dengan memunculkn 5 lagu yang paling mendekati berdasarkan interaksi user (artis dan lagu). Adapun contoh dari hasil tersebut adalah sebagai berikut:  
+![R-CF](gambar/rekomendasi%20collaborative%20filtering.png)  
 
 ---
 ### Kelebihan dan kekurangan CBF dan CF
